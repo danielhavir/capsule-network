@@ -34,8 +34,8 @@ class PrimaryCapsules(nn.Module):
 		"""
 		super(PrimaryCapsules, self).__init__()
 		self.dim_caps = dim_caps
-		self._caps_channel = int(out_channels / 8)
-		self.conv = nn.Conv2d(in_channels, out_channels, kernel_size=9, stride=2, padding=0)
+		self._caps_channel = int(out_channels / dim_caps)
+		self.conv = nn.Conv2d(in_channels, out_channels, kernel_size=kernel_size, stride=stride, padding=padding)
 
 	def forward(self, x):
 		out = self.conv(x)
