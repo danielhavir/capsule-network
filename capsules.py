@@ -67,7 +67,7 @@ class RoutingCapsules(nn.Module):
 
 	def forward(self, x):
 		batch_size = x.size(0)
-		# (batch_size, in_caps, in_dim) -> (batch_size, in_caps, 1, in_dim, 1)
+		# (batch_size, in_caps, in_dim) -> (batch_size, 1, in_caps, in_dim, 1)
 		x = x.unsqueeze(1).unsqueeze(4)
 		#
 		# W @ x =
