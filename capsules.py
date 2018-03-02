@@ -93,7 +93,6 @@ class RoutingCapsules(nn.Module):
 			# (batch_size, num_caps, in_caps, 1) * (batch_size, in_caps, num_caps, dim_caps) ->
 			# (batch_size, num_caps, in_caps, dim_caps) sum across in_caps ->
 			# (batch_size, num_caps, dim_caps)
-			# s = (c * u_hat).sum(dim=1)
 			s = (c * u_hat_detached).sum(dim=2)
 			# apply "squashing" non-linearity along dim_caps
 			v = squash(s)
