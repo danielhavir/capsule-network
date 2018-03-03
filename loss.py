@@ -11,8 +11,10 @@ class MarginLoss(nn.Module):
 		'''
 		Margin loss for digit existence
 		Eq. (4): L_k = T_k * max(0, m+ - ||v_k||)^2 + lambda * (1 - T_k) * max(0, ||v_k|| - m-)^2
-		:param size_average: should the losses be averaged (True) or summed (False) over observations for each minibatch.
-		:param loss_lambda: parameter for down-weighting the loss for missing digits
+		
+		Args:
+			size_average: should the losses be averaged (True) or summed (False) over observations for each minibatch.
+			loss_lambda: parameter for down-weighting the loss for missing digits
 		'''
 		super(MarginLoss, self).__init__()
 		self.size_average = size_average
@@ -34,8 +36,10 @@ class CapsuleLoss(nn.Module):
 		'''
 		Combined margin loss and reconstruction loss. Margin loss see above.
 		Sum squared error (SSE) was used as a reconstruction loss.
-		:param recon_loss_scale: 	param for scaling down the the reconstruction loss
-		:param size_average:		if True, reconstruction loss becomes MSE instead of SSE
+		
+		Args:
+			recon_loss_scale: 	param for scaling down the the reconstruction loss
+			size_average:		if True, reconstruction loss becomes MSE instead of SSE
 		'''
 		super(CapsuleLoss, self).__init__()
 		self.size_average = size_average
