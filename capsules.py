@@ -68,6 +68,18 @@ class RoutingCapsules(nn.Module):
 		self.num_routing = num_routing
 
 		self.W = nn.Parameter( 0.01 * torch.randn(1, num_caps, in_caps, dim_caps, in_dim ) )
+	
+	def __repr__(self):
+		tab = '  '
+		line = '\n'
+		next = ' -> '
+		res = self.__class__.__name__ + '('
+		res = res + line + tab + '(' + str(0) + '): ' + 'CapsuleLinear('
+		res = res + str(self.in_dim) + ', ' + str(self.dim_caps) + ')'
+		res = res + line + tab + '(' + str(1) + '): ' + 'Routing('
+		res = res + 'num_routing=' + str(self.num_routing) + ')'
+		res = res + line + ')'
+		return res
 
 	def forward(self, x):
 		batch_size = x.size(0)
