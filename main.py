@@ -5,11 +5,13 @@ import torchvision.transforms as transforms
 from trainer import CapsNetTrainer
 import argparse
 
-DATA_PATH = os.path.join(os.environ['data'], 'MNIST')
+DATA_PATH = os.path.join(os.environ['data'])
 
 # Collect arguments (if any)
 parser = argparse.ArgumentParser()
 
+# MNIST or CIFAR?
+parser.add_argument('dataset', nargs='?', type=str, default='MNIST', help="'MNIST' or 'CIFAR'")
 # Batch size
 parser.add_argument('-bs', '--batch_size', type=int, default=128, help='Batch size.')
 # Epochs
@@ -29,20 +31,39 @@ args = parser.parse_args()
 if args.multi_gpu:
     args.batch_size *= torch.cuda.device_count()
 
+datasets = {
+    'MNIST': torchvision.datasets.MNIST,
+    'CIFAR': torchvision.datasets.CIFAR10
+}
+
+if args.dataset.upper() == 'MNIST':
+    args.data_path = os.path.join(args.data_path, 'MNIST')
+    size = 28
+    classes = list(range(10))
+    mean, std = ( ( 0.1307,), ( 0.3081,) )
+elif args.dataset.upper() == 'CIFAR':
+    args.data_path = os.path.join(args.data_path, 'CIFAR')
+    size = 32
+    classes = ['plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
+    mean, std = ( (0.5, 0.5, 0.5), (0.5, 0.5, 0.5) )
+else:
+    raise ValueError('Dataset must be either MNIST or CIFAR')
+
 transform = transforms.Compose([
     # shift by 2 pixels in either direction with zero padding.
-    transforms.RandomCrop(28, padding=2),
+    transforms.RandomCrop(size, padding=2),
     transforms.ToTensor(),
-    transforms.Normalize( ( 0.1307,), ( 0.3081,) )
+    transforms.Normalize( mean, std )
 ])
 
 loaders = {}
-trainset = torchvision.datasets.MNIST(root=args.data_path, train=True, download=True, transform=transform)
+trainset = datasets[args.dataset.upper()](root=args.data_path, train=True, download=True, transform=transform)
 loaders['train'] = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=True, num_workers=2)
 
-testset = torchvision.datasets.MNIST(root=args.data_path, train=False, download=True, transform=transform)
+testset = datasets[args.dataset.upper()](root=args.data_path, train=False, download=True, transform=transform)
 loaders['test'] = torch.utils.data.DataLoader(testset, batch_size=args.batch_size, shuffle=False, num_workers=2)
+print(8*'#', f'Using {args.dataset.upper()} dataset', 8*'#')
 
 # Run
 caps_net = CapsNetTrainer(loaders, args.batch_size, args.learning_rate, args.num_routing, args.lr_decay, multi_gpu=args.multi_gpu)
-caps_net.run(args.epochs, classes=list(range(10)))
+caps_net.run(args.epochs, classes=classes)

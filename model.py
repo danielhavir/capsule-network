@@ -10,16 +10,17 @@ from numpy import prod
 import capsules as caps
 
 class CapsuleNetwork(nn.Module):
-	def __init__(self, img_shape, channels, primary_caps, primary_dim, num_classes, out_dim, num_routing):
+	def __init__(self, img_shape, channels, primary_dim, num_classes, out_dim, num_routing, kernel_size=9):
 		super(CapsuleNetwork, self).__init__()
 		self.img_shape = img_shape
 		self.num_classes = num_classes
 
-		self.conv1 = nn.Conv2d(img_shape[0], channels, 9, stride=1, bias=True)
+		self.conv1 = nn.Conv2d(img_shape[0], channels, kernel_size, stride=1, bias=True)
 		self.relu = nn.ReLU(inplace=True)
 
-		self.primary = caps.PrimaryCapsules(channels, channels, primary_caps, primary_dim)
-
+		self.primary = caps.PrimaryCapsules(channels, channels, primary_dim, kernel_size)
+		
+		primary_caps = int(channels / primary_dim * ( img_shape[1] - 2*(kernel_size-1) ) * ( img_shape[2] - 2*(kernel_size-1) ) / 4)
 		self.digits = caps.RoutingCapsules(primary_dim, primary_caps, num_classes, out_dim, num_routing)
 
 		self.decoder = nn.Sequential(

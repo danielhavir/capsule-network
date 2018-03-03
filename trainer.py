@@ -27,7 +27,7 @@ class CapsNetTrainer:
 		self.loaders = loaders
 		img_shape = self.loaders['train'].dataset[0][0].numpy().shape
 		
-		self.net = CapsuleNetwork(img_shape=img_shape, channels=256, primary_caps=32*6*6, primary_dim=8, num_classes=10, out_dim=16, num_routing=num_routing)
+		self.net = CapsuleNetwork(img_shape=img_shape, channels=256, primary_dim=8, num_classes=10, out_dim=16, num_routing=num_routing)
 		
 		if self.use_gpu:
 			if self.multi_gpu:
