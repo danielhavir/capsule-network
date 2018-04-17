@@ -11,7 +11,7 @@ DATA_PATH = os.path.join(os.environ['data'])
 parser = argparse.ArgumentParser()
 
 # MNIST or CIFAR?
-parser.add_argument('dataset', nargs='?', type=str, default='MNIST', help="'MNIST' or 'CIFAR'")
+parser.add_argument('dataset', nargs='?', type=str, default='MNIST', help="'MNIST' or 'CIFAR' (case insensitive).")
 # Batch size
 parser.add_argument('-bs', '--batch_size', type=int, default=128, help='Batch size.')
 # Epochs
@@ -24,9 +24,14 @@ parser.add_argument('--num_routing', type=int, default=3, help='Number of routin
 parser.add_argument('--lr_decay', type=float, default=0.96, help='Exponential learning rate decay.')
 # Use multiple GPUs?
 parser.add_argument('--multi_gpu', action='store_true', help='Flag whether to use multiple GPUs.')
+# Select GPU device
+parser.add_argument('--gpu_device', type=int, default=None, help='ID of a GPU to use when multiple GPUs are available.')
 # Data directory
-parser.add_argument('--data_path', type=str, default=DATA_PATH, help='Flag whether to use multiple GPUs.')
+parser.add_argument('--data_path', type=str, default=DATA_PATH, help='Path to the MNIST or CIFAR dataset. Alternatively you can set the path as an environmental variable $data.')
 args = parser.parse_args()
+
+if args.gpu_device is not None:
+    torch.cuda.set_device(args.gpu_device)
 
 if args.multi_gpu:
     args.batch_size *= torch.cuda.device_count()

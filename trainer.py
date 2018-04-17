@@ -7,6 +7,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.autograd import Variable
 import os
+from numpy import prod
 from datetime import datetime
 from model import CapsuleNetwork
 from loss import CapsuleLoss
@@ -39,12 +40,17 @@ class CapsNetTrainer:
 		self.optimizer = optim.Adam(self.net.parameters(), lr=learning_rate)
 		self.scheduler = optim.lr_scheduler.ExponentialLR(self.optimizer, gamma=lr_decay)
 		print(8*'#', 'PyTorch Model built'.upper(), 8*'#')
+		print('Num params:', sum([prod(p.size()) for p in self.net.parameters()]))
 	
 	def __repr__(self):
 		return repr(self.net)
 
 	def run(self, epochs, classes):
 		print(8*'#', 'Run started'.upper(), 8*'#')
+		eye = torch.eye(len(classes))
+		if self.use_gpu:
+			eye = eye.cuda()
+		
 		for epoch in range(1, epochs+1):
 			for phase in ['train', 'test']:
 				print(f'{phase}ing...'.capitalize())
@@ -58,10 +64,10 @@ class CapsNetTrainer:
 				correct = 0; total = 0
 				for i, (images, labels) in enumerate(self.loaders[phase]):
 					t1 = time()
-					# One-hot encode labels
-					labels = torch.eye(len(classes))[labels]
 					if self.use_gpu:
 						images, labels = images.cuda(), labels.cuda()
+					# One-hot encode labels
+					labels = eye[labels]
 
 					images, labels = Variable(images), Variable(labels)
 
@@ -95,8 +101,8 @@ class CapsNetTrainer:
 		error_rate = round((1-accuracy)*100, 2)
 		torch.save(self.net, os.path.join(SAVE_MODEL_PATH, f'{error_rate}_{now}.pth.tar'))
 
-		class_correct = list(0. for i in range(10))
-		class_total = list(0. for i in range(10))
+		class_correct = list(0. for _ in classes)
+		class_total = list(0. for _ in classes)
 		for images, labels in self.loaders['test']:
 			if self.use_gpu:
 				images, labels = images.cuda(), labels.cuda()
@@ -110,6 +116,6 @@ class CapsNetTrainer:
 				class_total[label] += 1
 
 
-		for i in range(10):
+		for i in range(len(classes)):
 			print('Accuracy of %5s : %2d %%' % (
 				classes[i], 100 * class_correct[i] / class_total[i]))
