@@ -5,7 +5,6 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.autograd import Variable
 
 
 def squash(s, dim=-1):
@@ -49,7 +48,7 @@ class PrimaryCapsules(nn.Module):
 
 
 class RoutingCapsules(nn.Module):
-	def __init__(self, in_dim, in_caps, num_caps, dim_caps, num_routing):
+	def __init__(self, in_dim, in_caps, num_caps, dim_caps, num_routing, device: torch.device):
 		"""
 		Initialize the layer.
 
@@ -66,6 +65,7 @@ class RoutingCapsules(nn.Module):
 		self.num_caps = num_caps
 		self.dim_caps = dim_caps
 		self.num_routing = num_routing
+		self.device = device
 
 		self.W = nn.Parameter( 0.01 * torch.randn(1, num_caps, in_caps, dim_caps, in_dim ) )
 	
@@ -98,9 +98,7 @@ class RoutingCapsules(nn.Module):
 		'''
 		Procedure 1: Routing algorithm
 		'''
-		b = Variable( torch.zeros(batch_size, self.num_caps, self.in_caps, 1) )
-		if torch.cuda.is_available():
-			b = b.cuda()
+		b = torch.zeros(batch_size, self.num_caps, self.in_caps, 1).to(self.device)
 
 		for route_iter in range(self.num_routing-1):
 			# (batch_size, num_caps, in_caps, 1) -> Softmax along num_caps

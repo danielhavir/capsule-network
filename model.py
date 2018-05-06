@@ -5,15 +5,15 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.autograd import Variable
 from numpy import prod
 import capsules as caps
 
 class CapsuleNetwork(nn.Module):
-	def __init__(self, img_shape, channels, primary_dim, num_classes, out_dim, num_routing, kernel_size=9):
+	def __init__(self, img_shape, channels, primary_dim, num_classes, out_dim, num_routing, device: torch.device, kernel_size=9):
 		super(CapsuleNetwork, self).__init__()
 		self.img_shape = img_shape
 		self.num_classes = num_classes
+		self.device = device
 
 		self.conv1 = nn.Conv2d(img_shape[0], channels, kernel_size, stride=1, bias=True)
 		self.relu = nn.ReLU(inplace=True)
@@ -21,7 +21,7 @@ class CapsuleNetwork(nn.Module):
 		self.primary = caps.PrimaryCapsules(channels, channels, primary_dim, kernel_size)
 		
 		primary_caps = int(channels / primary_dim * ( img_shape[1] - 2*(kernel_size-1) ) * ( img_shape[2] - 2*(kernel_size-1) ) / 4)
-		self.digits = caps.RoutingCapsules(primary_dim, primary_caps, num_classes, out_dim, num_routing)
+		self.digits = caps.RoutingCapsules(primary_dim, primary_caps, num_classes, out_dim, num_routing, device=self.device)
 
 		self.decoder = nn.Sequential(
 			nn.Linear(out_dim * num_classes, 512),
@@ -41,10 +41,7 @@ class CapsuleNetwork(nn.Module):
 
 		# Reconstruct the *predicted* image
 		_, max_length_idx = preds.max(dim=1)	
-		y = Variable(torch.sparse.torch.eye(self.num_classes))
-		if torch.cuda.is_available():
-			y = y.cuda()
-
+		y = torch.eye(self.num_classes).to(self.device)
 		y = y.index_select(dim=0, index=max_length_idx).unsqueeze(2)
 
 		reconstructions = self.decoder( (out*y).view(out.size(0), -1) )
